@@ -1,0 +1,45 @@
+name: Terraform CI
+
+on:
+  pull_request:
+    paths:
+      - "**/*.tf"
+      - "**/*.tfvars.example"
+      - ".github/workflows/terraform.yml"
+  push:
+    branches: [main]
+    paths:
+      - "**/*.tf"
+      - "**/*.tfvars.example"
+      - ".github/workflows/terraform.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Terraform static validation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      TF_IN_AUTOMATION: "true"
+      TF_INPUT: "false"
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.14.0
+
+      - name: Check formatting
+        run: terraform fmt -check -recursive
+
+      - name: Validate state backend bootstrap
+        run: |
+          terraform -chdir=bootstrap/state-backend init -backend=false -input=false
+          terraform -chdir=bootstrap/state-backend validate
+
+      - name: Validate dev environment and its modules
+        run: |
+          terraform -chdir=environments/dev init -backend=false -input=false
+          terraform -chdir=environments/dev validate
