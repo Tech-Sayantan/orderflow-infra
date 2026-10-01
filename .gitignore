@@ -1,0 +1,19 @@
+# Terraform working directories and state
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+
+# Local variable and environment files
+backend.hcl
+*.tfvars
+*.tfvars.json
+!*.example.tfvars
+.env
+.env.*
+!.env.example
+
+# macOS
+.DS_Store
