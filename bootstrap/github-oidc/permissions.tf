@@ -17,6 +17,15 @@ locals {
 
   eks_oidc_provider_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/*"
 
+  terraform_iam_role_read_actions = [
+    "iam:GetRole",
+    "iam:GetRolePolicy",
+    "iam:ListAttachedRolePolicies",
+    # Terraform checks instance-profile membership before replacing or deleting a role.
+    "iam:ListInstanceProfilesForRole",
+    "iam:ListRolePolicies",
+  ]
+
   terraform_read_actions = [
     "ec2:DescribeAddresses",
     "ec2:DescribeAddressesAttribute",
@@ -34,6 +43,7 @@ locals {
     "eks:DescribeAddon",
     "eks:DescribeCluster",
     "eks:DescribeNodegroup",
+    "eks:DescribeUpdate",
     "eks:ListAccessEntries",
     "eks:ListAccessPolicies",
     "eks:ListAddons",
@@ -43,8 +53,6 @@ locals {
     "iam:GetOpenIDConnectProvider",
     "iam:GetPolicy",
     "iam:GetPolicyVersion",
-    "iam:GetRole",
-    "iam:ListAttachedRolePolicies",
     "iam:ListOpenIDConnectProviders",
     "iam:ListPolicyVersions",
   ]
@@ -104,9 +112,9 @@ data "aws_iam_policy_document" "terraform_plan" {
   }
 
   statement {
-    sid       = "ListOrderflowRoleInlinePolicies"
+    sid       = "ReadOrderflowIAMRoles"
     effect    = "Allow"
-    actions   = ["iam:ListRolePolicies"]
+    actions   = local.terraform_iam_role_read_actions
     resources = local.eks_role_arns
   }
 }
@@ -168,6 +176,13 @@ data "aws_iam_policy_document" "terraform_apply" {
     effect    = "Allow"
     actions   = local.terraform_read_actions
     resources = ["*"]
+  }
+
+  statement {
+    sid       = "ReadOrderflowIAMRoles"
+    effect    = "Allow"
+    actions   = local.terraform_iam_role_read_actions
+    resources = local.eks_role_arns
   }
 
   statement {
@@ -236,12 +251,11 @@ data "aws_iam_policy_document" "terraform_apply" {
       "iam:CreateRole",
       "iam:DeleteRole",
       "iam:DetachRolePolicy",
-      "iam:GetRole",
-      "iam:ListAttachedRolePolicies",
-      "iam:ListRolePolicies",
       "iam:TagRole",
       "iam:UntagRole",
       "iam:UpdateAssumeRolePolicy",
+      "iam:UpdateRole",
+      "iam:UpdateRoleDescription",
     ]
     resources = local.eks_role_arns
   }

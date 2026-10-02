@@ -4,7 +4,7 @@
 
 Pull requests run Terraform formatting and static validation without AWS credentials. After a change is merged to `main`, GitHub Actions assumes the plan role through OIDC, reads the dev state, builds a plan, and stores the binary plan in the private state bucket. The workflow summary lists resource addresses and actions without printing the complete plan values into the public Actions log.
 
-The apply job waits for approval in the `infra-apply` GitHub Environment. After approval, it assumes a separate apply role, downloads the exact plan for that commit, and applies it. A successful apply deletes the plan object. A lifecycle rule expires leftover plan objects and their noncurrent S3 versions after seven days.
+The apply job waits for approval in the `infra-apply` GitHub Environment. After approval, it assumes a separate apply role, downloads the exact plan for that commit, and applies it. Once AWS authentication succeeds, cleanup deletes the plan object even if apply fails. Recovery therefore requires a fresh plan, not a retry of only the apply job. A lifecycle rule expires leftover plan objects and their noncurrent S3 versions after seven days.
 
 The plan role is trusted only for the immutable `main` branch subject. The apply role is trusted only for the `infra-apply` environment subject. Both roles use short-lived STS credentials; neither role uses stored AWS access keys.
 
@@ -46,6 +46,8 @@ The plan file is tied to the commit SHA. If the remote state changes before appl
 - **S3 `AccessDenied`:** check the state bucket variable, state key, `.tflock` permissions, and plan prefix. The GitHub role policies intentionally limit S3 access to the dev state and plan objects.
 - **Terraform reports a missing variable:** refresh the two repository secrets; the EKS API allow-list uses the operator's current `/32` address.
 - **`Saved plan is stale`:** do not force it. Generate a fresh plan and review that one.
+- **IAM role `AccessDenied` during refresh or replacement:** Terraform calls `ListRolePolicies` to inspect inline policies and `ListInstanceProfilesForRole` before deleting a role, even if both lists are empty. Plan and apply share the same IAM read actions, scoped to the three OrderFlow EKS roles. Inspect the denied API and its resource scope before changing permissions.
+- **A fresh plan replaces roles after a failed create:** Terraform may have created the AWS roles but marked their state as tainted when a later provider read failed. Check both AWS and Terraform state; replacement can be expected for those incomplete creations. Regenerate the plan after fixing the failure rather than removing resources from state.
 - **A workflow waits at `infra-apply`:** this is the expected deployment gate; review the plan summary before approving.
 
 The first real EKS apply is still billable. The environment approval is the cost-control checkpoint; Terraform plans and IAM/OIDC setup alone do not create EKS worker nodes.
