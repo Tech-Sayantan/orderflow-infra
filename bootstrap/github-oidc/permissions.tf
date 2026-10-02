@@ -17,6 +17,10 @@ locals {
 
   eks_oidc_provider_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/*"
 
+  ecr_repository_arns = [
+    "arn:aws:ecr:us-east-1:${data.aws_caller_identity.current.account_id}:repository/orderflow/*",
+  ]
+
   eks_service_linked_role_arns = [
     "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/eks.amazonaws.com/AWSServiceRoleForAmazonEKS",
     "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/eks-nodegroup.amazonaws.com/AWSServiceRoleForAmazonEKSNodegroup",
@@ -117,6 +121,16 @@ data "aws_iam_policy_document" "terraform_plan" {
   }
 
   statement {
+    sid    = "ReadOrderflowECRRepositories"
+    effect = "Allow"
+    actions = [
+      "ecr:DescribeRepositories",
+      "ecr:ListTagsForResource",
+    ]
+    resources = local.ecr_repository_arns
+  }
+
+  statement {
     sid       = "ReadOrderflowIAMRoles"
     effect    = "Allow"
     actions   = local.terraform_iam_role_read_actions
@@ -181,6 +195,30 @@ data "aws_iam_policy_document" "terraform_apply" {
     effect    = "Allow"
     actions   = local.terraform_read_actions
     resources = ["*"]
+  }
+
+  statement {
+    sid    = "ReadOrderflowECRRepositories"
+    effect = "Allow"
+    actions = [
+      "ecr:DescribeRepositories",
+      "ecr:ListTagsForResource",
+    ]
+    resources = local.ecr_repository_arns
+  }
+
+  statement {
+    sid    = "ManageOrderflowECRRepositories"
+    effect = "Allow"
+    actions = [
+      "ecr:CreateRepository",
+      "ecr:DeleteRepository",
+      "ecr:PutImageTagMutability",
+      "ecr:PutImageScanningConfiguration",
+      "ecr:TagResource",
+      "ecr:UntagResource",
+    ]
+    resources = local.ecr_repository_arns
   }
 
   statement {

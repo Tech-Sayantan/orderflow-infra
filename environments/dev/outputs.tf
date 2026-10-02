@@ -12,3 +12,8 @@ output "eks_node_group_name" {
   description = "Name of the dev managed node group."
   value       = module.eks.node_group_name
 }
+
+output "ecr_repository_urls" {
+  description = "Private ECR URLs for the dev application services."
+  value       = module.ecr.repository_urls
+}
