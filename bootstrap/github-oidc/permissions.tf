@@ -17,6 +17,8 @@ locals {
 
   eks_oidc_provider_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/*"
 
+  github_ecr_publisher_role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/orderflow-github-ecr-publisher"
+
   ecr_repository_arns = [
     "arn:aws:ecr:us-east-1:${data.aws_caller_identity.current.account_id}:repository/orderflow/*",
   ]
@@ -136,6 +138,13 @@ data "aws_iam_policy_document" "terraform_plan" {
     actions   = local.terraform_iam_role_read_actions
     resources = local.eks_role_arns
   }
+
+  statement {
+    sid       = "ReadOrderflowECRPublisherRole"
+    effect    = "Allow"
+    actions   = local.terraform_iam_role_read_actions
+    resources = [local.github_ecr_publisher_role_arn]
+  }
 }
 
 resource "aws_iam_role_policy" "terraform_plan" {
@@ -249,6 +258,13 @@ data "aws_iam_policy_document" "terraform_apply" {
   }
 
   statement {
+    sid       = "ReadOrderflowECRPublisherRole"
+    effect    = "Allow"
+    actions   = local.terraform_iam_role_read_actions
+    resources = [local.github_ecr_publisher_role_arn]
+  }
+
+  statement {
     sid    = "ManageOrderflowNetwork"
     effect = "Allow"
     actions = [
@@ -321,6 +337,21 @@ data "aws_iam_policy_document" "terraform_apply" {
       "iam:UpdateRoleDescription",
     ]
     resources = local.eks_role_arns
+  }
+
+  statement {
+    sid    = "ManageOrderflowECRPublisherRole"
+    effect = "Allow"
+    actions = [
+      "iam:CreateRole",
+      "iam:DeleteRole",
+      "iam:DeleteRolePolicy",
+      "iam:PutRolePolicy",
+      "iam:TagRole",
+      "iam:UntagRole",
+      "iam:UpdateAssumeRolePolicy",
+    ]
+    resources = [local.github_ecr_publisher_role_arn]
   }
 
   statement {
