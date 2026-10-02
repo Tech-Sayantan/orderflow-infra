@@ -30,3 +30,18 @@ module "eks" {
     Environment = "dev"
   }
 }
+
+module "ecr" {
+  source = "../../modules/ecr"
+
+  repository_names = toset([
+    "orderflow/orders-api",
+    "orderflow/pricing-api",
+  ])
+
+  tags = {
+    Project     = "orderflow"
+    Environment = "dev"
+    ManagedBy   = "terraform"
+  }
+}
