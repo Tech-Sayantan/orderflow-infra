@@ -231,6 +231,7 @@ data "aws_iam_policy_document" "terraform_apply" {
       "iam:DetachRolePolicy",
       "iam:GetRole",
       "iam:ListAttachedRolePolicies",
+      "iam:ListRolePolicies",
       "iam:TagRole",
       "iam:UntagRole",
       "iam:UpdateAssumeRolePolicy",
