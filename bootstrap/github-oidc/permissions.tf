@@ -102,6 +102,13 @@ data "aws_iam_policy_document" "terraform_plan" {
     actions   = local.terraform_read_actions
     resources = ["*"]
   }
+
+  statement {
+    sid       = "ListOrderflowRoleInlinePolicies"
+    effect    = "Allow"
+    actions   = ["iam:ListRolePolicies"]
+    resources = local.eks_role_arns
+  }
 }
 
 resource "aws_iam_role_policy" "terraform_plan" {
