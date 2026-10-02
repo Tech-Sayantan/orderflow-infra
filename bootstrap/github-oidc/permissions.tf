@@ -17,6 +17,11 @@ locals {
 
   eks_oidc_provider_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/*"
 
+  eks_service_linked_role_arns = [
+    "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/eks.amazonaws.com/AWSServiceRoleForAmazonEKS",
+    "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/eks-nodegroup.amazonaws.com/AWSServiceRoleForAmazonEKSNodegroup",
+  ]
+
   terraform_iam_role_read_actions = [
     "iam:GetRole",
     "iam:GetRolePolicy",
@@ -176,6 +181,26 @@ data "aws_iam_policy_document" "terraform_apply" {
     effect    = "Allow"
     actions   = local.terraform_read_actions
     resources = ["*"]
+  }
+
+  statement {
+    sid       = "ReadEKSServiceLinkedRoles"
+    effect    = "Allow"
+    actions   = ["iam:GetRole"]
+    resources = local.eks_service_linked_role_arns
+  }
+
+  statement {
+    sid       = "CreateEKSServiceLinkedRolesIfMissing"
+    effect    = "Allow"
+    actions   = ["iam:CreateServiceLinkedRole"]
+    resources = local.eks_service_linked_role_arns
+
+    condition {
+      test     = "StringEquals"
+      variable = "iam:AWSServiceName"
+      values   = ["eks.amazonaws.com", "eks-nodegroup.amazonaws.com"]
+    }
   }
 
   statement {
