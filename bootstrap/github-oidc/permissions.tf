@@ -13,6 +13,7 @@ locals {
     "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/orderflow-dev-cluster-role",
     "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/orderflow-dev-node-role",
     "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/orderflow-dev-vpc-cni-role",
+    "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/orderflow-dev-ebs-csi-role",
   ]
 
   eks_oidc_provider_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/*"
@@ -391,6 +392,7 @@ data "aws_iam_policy_document" "terraform_apply" {
       "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
       "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy",
       "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPullOnly",
+      "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicyV2",
     ]
   }
 }
