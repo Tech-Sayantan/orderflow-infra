@@ -392,7 +392,7 @@ data "aws_iam_policy_document" "terraform_apply" {
       "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
       "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy",
       "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPullOnly",
-      "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicyV2",
+      "arn:aws:iam::aws:policy/AmazonEBSCSIDriverPolicyV2",
     ]
   }
 }
