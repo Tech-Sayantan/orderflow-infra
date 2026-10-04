@@ -28,6 +28,7 @@ resource "aws_eks_addon" "vpc_cni" {
   cluster_name             = aws_eks_cluster.this.name
   addon_name               = "vpc-cni"
   service_account_role_arn = aws_iam_role.vpc_cni.arn
+  configuration_values     = jsonencode({ enableNetworkPolicy = "true" })
   tags                     = var.tags
 
   depends_on = [
